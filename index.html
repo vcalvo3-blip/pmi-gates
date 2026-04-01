@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="PMI Gates"/>
+<meta name="theme-color" content="#020818"/>
+<title>PMI Gates · Consulta de Stands</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#020818;--bg2:#070d26;--bg3:#0d1535;
+  --text:#eaf5ff;--sub:#a0b8cc;--muted:#4a6070;--dimmed:#1a2a3a;
+  --finger:#00f5d4;
+  --contacto:#4cc9f0;
+  --rbus:#f8961e;
+  --modA:#b77fff;--modB:#00f5d4;--modC:#4cc9f0;--modD:#f8961e;--modR:#f72585;
+}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:var(--bg);
+  font-family:'Courier New',Courier,monospace;
+  color:var(--text);
+  display:flex;flex-direction:column;
+  -webkit-tap-highlight-color:transparent;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,245,212,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,245,212,0.025) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+
+/* HEADER */
+.header{
+  position:relative;z-index:10;flex-shrink:0;
+  background:linear-gradient(180deg,rgba(2,8,24,0.98),rgba(7,13,38,0.95));
+  border-bottom:1px solid rgba(0,245,212,0.12);
+  padding:max(env(safe-area-inset-top),14px) 14px 12px;
+}
+.header-eyebrow{font-size:9px;letter-spacing:7px;color:#00f5d4;opacity:0.55;text-transform:uppercase;margin-bottom:4px;}
+.header-title{font-size:clamp(16px,5vw,26px);font-weight:900;letter-spacing:4px;color:var(--text);text-transform:uppercase;text-shadow:0 0 40px rgba(0,245,212,0.35);}
+
+/* SEARCH */
+.search-wrap{padding:10px 14px;background:rgba(7,13,38,0.95);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;position:relative;z-index:10;}
+.search-input{
+  width:100%;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+  color:var(--text);font-family:inherit;font-size:15px;
+  letter-spacing:3px;padding:10px 14px;outline:none;
+  -webkit-appearance:none;
+}
+.search-input:focus{border-color:rgba(0,245,212,0.4);}
+.search-input::placeholder{color:var(--dimmed);letter-spacing:2px;font-size:12px;}
+
+/* CONTENT */
+.content{
+  position:relative;z-index:1;flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:12px 12px calc(env(safe-area-inset-bottom,0px)+16px);
+  -webkit-overflow-scrolling:touch;
+}
+
+/* MODULE SECTION */
+.mod-section{margin-bottom:18px;}
+.mod-header{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:8px;padding-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.mod-letter{font-size:11px;font-weight:900;letter-spacing:3px;padding:3px 8px;border-radius:4px;}
+.mod-name{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+
+/* GATE BUTTONS */
+.gate-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.gate-btn{
+  min-width:62px;padding:9px 10px;text-align:center;
+  border-radius:8px;cursor:pointer;font-family:inherit;
+  border:1.5px solid rgba(255,255,255,0.07);
+  background:rgba(255,255,255,0.03);
+  transition:all 0.15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.gate-btn:active{transform:scale(0.94);}
+.gate-num{font-size:16px;font-weight:900;letter-spacing:1px;}
+.gate-sub{font-size:7px;letter-spacing:1px;text-transform:uppercase;margin-top:2px;opacity:0.65;}
+
+/* RESULT OVERLAY */
+.overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(2,8,24,0.85);
+  backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;
+  padding:0 0 env(safe-area-inset-bottom,0px);
+  animation:overlayIn 0.2s ease;
+}
+@keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+
+.result-sheet{
+  width:100%;border-radius:20px 20px 0 0;
+  padding:20px 20px 28px;
+  animation:sheetUp 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+
+.rs-handle{width:36px;height:3px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 18px;}
+.rs-gate{font-size:64px;font-weight:900;letter-spacing:2px;line-height:1;margin-bottom:4px;}
+.rs-mod{font-size:11px;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;opacity:0.7;}
+
+.rs-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.rs-pill{font-size:11px;font-weight:700;letter-spacing:2px;padding:6px 14px;border-radius:20px;text-transform:uppercase;}
+
+.rs-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.rs-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(0,0,0,0.25);border-radius:8px;padding:10px 14px;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.rs-row-label{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.rs-row-val{font-size:15px;font-weight:900;letter-spacing:2px;}
+
+.rs-close{
+  width:100%;padding:13px;border-radius:10px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:var(--sub);font-family:inherit;font-size:12px;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.no-results{font-size:11px;color:var(--dimmed);letter-spacing:3px;text-transform:uppercase;padding:20px 0;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">◈ SISTEMA DE CONSULTA · PMI ◈</div>
+  <div class="header-title">GATE DIRECTORY</div>
+</div>
+
+<div class="search-wrap">
+  <input class="search-input" id="search" type="search"
+    placeholder="Buscar gate... ej: 58, 34B, R-5"
+    oninput="onSearch(this.value)"
+    autocomplete="off" autocorrect="off" spellcheck="false"/>
+</div>
+
+<div class="content" id="content"></div>
+<div id="overlay"></div>
+
+<script>
+const gates = [
+  // MÓDULO B — FINGER
+  {n:'10', mod:'B', tipo:'FINGER',    cinta:'15'},
+  {n:'12', mod:'B', tipo:'FINGER',    cinta:'15'},
+  {n:'14', mod:'B', tipo:'FINGER',    cinta:'12'},
+  {n:'16', mod:'B', tipo:'FINGER',    cinta:'12'},
+  {n:'18', mod:'B', tipo:'FINGER',    cinta:'11'},
+  {n:'20', mod:'B', tipo:'FINGER',    cinta:'11'},
+  {n:'22', mod:'B', tipo:'FINGER',    cinta:'10'},
+  {n:'24', mod:'B', tipo:'FINGER',    cinta:'10'},
+  {n:'26', mod:'B', tipo:'FINGER',    cinta:'09'},
+  {n:'28', mod:'B', tipo:'FINGER',    cinta:'09'},
+  // MÓDULO A — CONTACTO
+  {n:'29', mod:'A', tipo:'CONTACTO',  cinta:'16'},
+  {n:'30', mod:'A', tipo:'CONTACTO',  cinta:'16'},
+  {n:'32', mod:'A', tipo:'CONTACTO',  cinta:'16'},
+  {n:'34', mod:'A', tipo:'CONTACTO',  cinta:'18'},
+  {n:'34B',mod:'A', tipo:'REMOTO_BUS',cinta:'18'},
+  {n:'36', mod:'A', tipo:'CONTACTO',  cinta:'16'},
+  {n:'38', mod:'A', tipo:'CONTACTO',  cinta:'07'},
+  {n:'40', mod:'A', tipo:'CONTACTO',  cinta:'08'},
+  {n:'42', mod:'A', tipo:'CONTACTO',  cinta:'14'},
+  {n:'44', mod:'A', tipo:'CONTACTO',  cinta:'14'},
+  {n:'46', mod:'A', tipo:'CONTACTO',  cinta:'14'},
+  {n:'48', mod:'A', tipo:'CONTACTO',  cinta:'07'},
+  {n:'50', mod:'A', tipo:'CONTACTO',  cinta:'21'},
+  // MÓDULO C — CONTACTO
+  {n:'52', mod:'C', tipo:'CONTACTO',  cinta:'17'},
+  {n:'54', mod:'C', tipo:'CONTACTO',  cinta:'12'},
+  {n:'56', mod:'C', tipo:'CONTACTO',  cinta:'15'},
+  {n:'58', mod:'C', tipo:'CONTACTO',  cinta:'13'},
+  {n:'60', mod:'C', tipo:'CONTACTO',  cinta:'15'},
+  {n:'62', mod:'C', tipo:'CONTACTO',  cinta:'12'},
+  {n:'64', mod:'C', tipo:'CONTACTO',  cinta:'15'},
+  {n:'66', mod:'C', tipo:'CONTACTO',  cinta:'13'},
+  {n:'68', mod:'C', tipo:'CONTACTO',  cinta:'14'},
+  {n:'70', mod:'C', tipo:'CONTACTO',  cinta:'14'},
+  {n:'72', mod:'C', tipo:'CONTACTO',  cinta:'16'},
+  // MÓDULO D — CONTACTO
+  {n:'74', mod:'D', tipo:'CONTACTO',  cinta:'17'},
+  {n:'76', mod:'D', tipo:'CONTACTO',  cinta:'17'},
+  {n:'78', mod:'D', tipo:'CONTACTO',  cinta:'17'},
+  {n:'80', mod:'D', tipo:'CONTACTO',  cinta:'10'},
+  {n:'82', mod:'D', tipo:'CONTACTO',  cinta:'10'},
+  {n:'84', mod:'D', tipo:'CONTACTO',  cinta:'13'},
+  {n:'86', mod:'D', tipo:'CONTACTO',  cinta:'11'},
+  {n:'88', mod:'D', tipo:'CONTACTO',  cinta:'09'},
+  {n:'90', mod:'D', tipo:'CONTACTO',  cinta:'09'},
+  {n:'92', mod:'D', tipo:'CONTACTO',  cinta:'10'},
+  {n:'94', mod:'D', tipo:'CONTACTO',  cinta:'12'},
+  {n:'96', mod:'D', tipo:'CONTACTO',  cinta:'13'},
+  {n:'98', mod:'D', tipo:'CONTACTO',  cinta:'15'},
+  // REMOTO — BUS
+  {n:'100', mod:'R', tipo:'REMOTO_BUS', cinta:'11'},
+  {n:'101', mod:'R', tipo:'REMOTO_BUS', cinta:'09'},
+  {n:'102', mod:'R', tipo:'REMOTO_BUS', cinta:'18'},
+  {n:'104', mod:'R', tipo:'REMOTO_BUS', cinta:'11'},
+  {n:'106', mod:'R', tipo:'REMOTO_BUS', cinta:'17'},
+  {n:'107', mod:'R', tipo:'REMOTO_BUS', cinta:'17'},
+  {n:'108', mod:'R', tipo:'REMOTO_BUS', cinta:'11'},
+  {n:'110', mod:'R', tipo:'REMOTO_BUS', cinta:'11'},
+  {n:'112', mod:'R', tipo:'REMOTO_BUS', cinta:'11'},
+  {n:'114', mod:'R', tipo:'REMOTO_BUS', cinta:'11'},
+  {n:'R-1', mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-2', mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-3', mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-4', mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-5', mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-7', mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-8', mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-9', mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-11',mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-12',mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-13',mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-14',mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-15',mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-16',mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-17',mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+  {n:'R-18',mod:'R', tipo:'REMOTO_BUS', cinta:'—'},
+];
+
+const MOD = {
+  B:{name:'Módulo B · Finger',    color:'#00f5d4', bg:'rgba(0,245,212,0.08)'},
+  A:{name:'Módulo A · Norte',     color:'#b77fff', bg:'rgba(183,127,255,0.08)'},
+  C:{name:'Módulo C · Este',      color:'#4cc9f0', bg:'rgba(76,201,240,0.08)'},
+  D:{name:'Módulo D · Sur/Oeste', color:'#f8961e', bg:'rgba(248,150,30,0.08)'},
+  R:{name:'Remoto · Bus',         color:'#f72585', bg:'rgba(247,37,133,0.08)'},
+};
+
+const TIPO = {
+  FINGER:    {label:'🛬 Finger',     accent:'#00f5d4', bg:'rgba(0,245,212,0.15)'},
+  CONTACTO:  {label:'✈ Contacto',   accent:'#4cc9f0', bg:'rgba(76,201,240,0.15)'},
+  REMOTO_BUS:{label:'🚌 Remoto Bus', accent:'#f8961e', bg:'rgba(248,150,30,0.15)'},
+};
+
+let selectedGate = null;
+let searchQuery = '';
+
+function onSearch(val) {
+  searchQuery = val.trim().toUpperCase();
+  renderContent();
+}
+
+function renderContent() {
+  const c = document.getElementById('content');
+  c.innerHTML = '';
+
+  const q = searchQuery;
+  const filtered = q
+    ? gates.filter(g => g.n.toUpperCase().includes(q) || g.mod.includes(q))
+    : gates;
+
+  if (filtered.length === 0) {
+    c.innerHTML = '<div class="no-results">◈ Sin resultados</div>';
+    return;
+  }
+
+  // Group by module
+  const order = ['B','A','C','D','R'];
+  order.forEach(modId => {
+    const modGates = filtered.filter(g => g.mod === modId);
+    if (!modGates.length) return;
+
+    const m = MOD[modId];
+    const section = document.createElement('div');
+    section.className = 'mod-section';
+
+    const header = document.createElement('div');
+    header.className = 'mod-header';
+    header.innerHTML = `
+      <div class="mod-letter" style="background:${m.bg};color:${m.color};border:1px solid ${m.color}44">${modId}</div>
+      <div class="mod-name">${m.name}</div>`;
+    section.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'gate-grid';
+
+    modGates.forEach(g => {
+      const t = TIPO[g.tipo];
+      const btn = document.createElement('button');
+      btn.className = 'gate-btn';
+      btn.style.cssText = `border-color:${t.accent}44;`;
+      btn.innerHTML = `
+        <div class="gate-num" style="color:${t.accent}">${g.n}</div>
+        <div class="gate-sub" style="color:${t.accent}">${g.tipo==='FINGER'?'FGR':g.tipo==='CONTACTO'?'CTX':'RBS'}</div>`;
+      btn.addEventListener('click', () => showResult(g));
+      grid.appendChild(btn);
+    });
+
+    section.appendChild(grid);
+    c.appendChild(section);
+  });
+}
+
+function showResult(g) {
+  selectedGate = g;
+  const m = MOD[g.mod];
+  const t = TIPO[g.tipo];
+  const ov = document.getElementById('overlay');
+
+  ov.innerHTML = '';
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.addEventListener('click', e => { if(e.target===overlay) closeResult(); });
+
+  const sheet = document.createElement('div');
+  sheet.className = 'result-sheet';
+  sheet.style.cssText = `background:linear-gradient(160deg,${t.accent}10,#070d26);border:1.5px solid ${t.accent}33;box-shadow:0 -20px 60px ${t.accent}18;`;
+
+  sheet.innerHTML = `
+    <div class="rs-handle"></div>
+    <div class="rs-gate" style="color:${t.accent};text-shadow:0 0 30px ${t.accent}66">${g.n}</div>
+    <div class="rs-mod" style="color:${m.color}">${m.name.toUpperCase()}</div>
+
+    <div class="rs-pills">
+      <div class="rs-pill" style="background:${t.bg};color:${t.accent};border:1px solid ${t.accent}44">${t.label}</div>
+    </div>
+
+    <div class="rs-rows">
+      <div class="rs-row">
+        <div class="rs-row-label">Módulo</div>
+        <div class="rs-row-val" style="color:${m.color}">${g.mod === 'R' ? 'REMOTO' : 'MÓDULO ' + g.mod}</div>
+      </div>
+      <div class="rs-row">
+        <div class="rs-row-label">Cinta equipajes</div>
+        <div class="rs-row-val" style="color:${t.accent}">${g.cinta === '—' ? 'Por confirmar' : g.cinta}</div>
+      </div>
+      ${g.tipo==='REMOTO_BUS' ? `
+      <div class="rs-row">
+        <div class="rs-row-label">Aviso</div>
+        <div class="rs-row-val" style="color:${t.accent};font-size:11px;letter-spacing:1px;">Prever bus · validar T-60</div>
+      </div>` : ''}
+      ${g.n.includes('B') ? `
+      <div class="rs-row">
+        <div class="rs-row-label">Atención</div>
+        <div class="rs-row-val" style="color:${t.accent};font-size:11px;letter-spacing:1px;">Confirmar posición exacta</div>
+      </div>` : ''}
+    </div>
+
+    <button class="rs-close" onclick="closeResult()">← volver</button>`;
+
+  overlay.appendChild(sheet);
+  ov.appendChild(overlay);
+}
+
+function closeResult() {
+  document.getElementById('overlay').innerHTML = '';
+  selectedGate = null;
+}
+
+// Init
+renderContent();
+</script>
+</body>
+</html>
